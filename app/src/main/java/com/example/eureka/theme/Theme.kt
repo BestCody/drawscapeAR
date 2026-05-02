@@ -6,6 +6,15 @@ import androidx.compose.ui.graphics.Color
 
 val ColorSurface          = Color(0xFFFFFFFF)
 val ColorSurfaceVariant   = Color(0xFFFFFFFA)
+val ColorCloud            = Color(0xFF3285F5)
+
+val ColorBrush            = Color(0xFF00BF63)
+
+val ColorEraser           = Color(0xFFF4C027)
+
+val ColorFiller           = Color(0xFF9A51D9)
+
+val ColorDisabled         = Color(0x00823282)
 val ColorPrimary          = Color(0xFF6EE7F7)
 val ColorAccent           = Color(0xFFFF6B6B)
 val ColorOnSurface        = Color(0xFFE6E1E5)
