@@ -101,7 +101,6 @@ class ARDrawViewModel @Inject constructor(
             }
         }
     }
-
     private var strokeRenderer: StrokeRenderer? = null
     strokeRepository.observeStrokes(spaceId, userId).collect { strokes ->
         val pose = anchorPose ?: return@collect
