@@ -187,7 +187,7 @@ private fun ARBottomToolbar(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToolButton(Icons.Outlined.Edit,      "Brush",  uiState.activeTool == DrawingTool.BRUSH)   { onSelectTool(DrawingTool.BRUSH) }
+            ToolButton(Icons.Outlined.Edit,"Brush",uiState.activeTool == DrawingTool.BRUSH)   { onSelectTool(DrawingTool.BRUSH) }
             ToolButton(Icons.Outlined.AutoFixHigh, "Erase", uiState.activeTool == DrawingTool.ERASER) { onSelectTool(DrawingTool.ERASER) }
             ToolButton(Icons.Outlined.SelectAll, "Select", uiState.activeTool == DrawingTool.SELECT)  { onSelectTool(DrawingTool.SELECT) }
         }
@@ -265,7 +265,7 @@ private fun ToolButton(
         Icon(
             imageVector        = icon,
             contentDescription = label,
-            tint               = if (selected) ColorPrimary else ColorOnSurfaceMuted,
+            tint               = Color.Black,
             modifier           = Modifier.size(20.dp)
         )
     }

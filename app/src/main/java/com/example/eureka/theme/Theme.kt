@@ -4,13 +4,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val ColorSurface          = Color(0xFF14141C)
-val ColorSurfaceVariant   = Color(0xFF1E1E2A)
+val ColorSurface          = Color(0xFFFFFFFF)
+val ColorSurfaceVariant   = Color(0xFFFFFFFA)
 val ColorPrimary          = Color(0xFF6EE7F7)
-val ColorPrimaryVariant   = Color(0xFF3BC8DE)
 val ColorAccent           = Color(0xFFFF6B6B)
-val ColorOnSurface        = Color(0xFFE8E8F0)
-val ColorOnSurfaceMuted   = Color(0xFF7A7A94)
+val ColorOnSurface        = Color(0x00000000)
+val ColorOnSurfaceMuted   = Color(0x00000000)
 val ColorStrokeDefault    = Color(0xFF6EE7F7)
 val ColorStrokeWhite      = Color(0xFFFFFFFF)
 val ColorStrokeGold       = Color(0xFFFFD166)
