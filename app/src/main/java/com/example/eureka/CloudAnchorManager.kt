@@ -37,14 +37,24 @@ class CloudAnchorManager(private val session: Session) {
     /** Call every frame while resolving. */
     fun checkResolvingStatus() {
         val anchor = cloudAnchor ?: return
+
         when (anchor.cloudAnchorState) {
+
             Anchor.CloudAnchorState.SUCCESS -> {
                 onAnchorResolved?.invoke(anchor)
                 cloudAnchor = null
             }
-            Anchor.CloudAnchorState.ERROR_RESOLVE_SDK_VERSION_TOO_OLD ->
-                onError?.invoke("Update ARCore SDK")
-            else -> { /* Still resolving */ }
+
+            Anchor.CloudAnchorState.ERROR_NOT_AUTHORIZED,
+            Anchor.CloudAnchorState.ERROR_SERVICE_UNAVAILABLE,
+            Anchor.CloudAnchorState.ERROR_INTERNAL -> {
+                onError?.invoke("Cloud Anchor error: ${anchor.cloudAnchorState}")
+                cloudAnchor = null
+            }
+
+            else -> {
+                // still resolving
+            }
         }
     }
 }
