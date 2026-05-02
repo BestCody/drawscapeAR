@@ -1,7 +1,5 @@
 package com.example.eureka
-
-import android.view.View
-import androidx.compose.ui.zIndex
+import com.google.ar.core.Config
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,9 +17,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.example.eureka.theme.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import io.github.sceneview.ar.ARSceneView
+import android.Manifest
+import com.example.eureka.theme.ColorAccent
+import com.example.eureka.theme.ColorOnSurface
+import com.example.eureka.theme.ColorOnSurfaceMuted
+import com.example.eureka.theme.ColorPrimary
+import com.example.eureka.theme.ColorStrokeDefault
+import com.example.eureka.theme.ColorStrokeGold
+import com.example.eureka.theme.ColorStrokeGreen
+import com.example.eureka.theme.ColorStrokePurple
+import com.example.eureka.theme.ColorStrokeWhite
+import com.example.eureka.theme.ColorSurface
 
 // Define all drawing tools
 enum class DrawingTool { BRUSH, ERASER, SELECT }
@@ -35,6 +47,7 @@ data class ARDrawUIState(
     val isAnchored      : Boolean     = false, // Anchor the drawing to space
     val isSaving        : Boolean     = false,
     val showColorPicker : Boolean     = false,
+    val isPublicDrawing : Boolean     = true,
     val undoStack       : Int         = 0,
     val redoStack       : Int         = 0,
 )
@@ -47,21 +60,41 @@ private val toolConfig = mapOf(
 )
 
 @Composable
+fun ARDrawScreen(viewModel: ARDrawViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState
+    val context = LocalContext.current
+
+    // Camera permission — kept from old version
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+    LaunchedEffect(Unit) {
+        if (!cameraPermission.status.isGranted) {
+            cameraPermission.launchPermissionRequest()
+        }
+        viewModel.initialize(context)
+    }
 // To draw the AR camera window
 fun ARDrawScreen(onOpenProfile: () -> Unit) {
     var uiState by remember { mutableStateOf(ARDrawUIState()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // AR surface — replace AndroidView content with ArSceneView when ready
-        AndroidView(
-            factory  = { ctx ->
-                View(ctx).apply {
-                    setBackgroundColor(android.graphics.Color.BLACK)
-                }
+        // ✅ SceneView 4: ARSceneView is a pure Composable (no AndroidView wrapper)
+        ARSceneView(
+            modifier = Modifier.fillMaxSize(),
+            planeRenderer = true,
+            sessionConfiguration = { _, config ->
+                config.cloudAnchorMode     = Config.CloudAnchorMode.ENABLED
+                config.planeFindingMode    = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+                config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
+                config.geospatialMode      = Config.GeospatialMode.ENABLED
             },
-            modifier = Modifier.fillMaxSize()
-        )
+            onSessionUpdated = { _, frame ->
+                viewModel.onFrameUpdated(frame)
+            }
+        ) {
+            // Stroke nodes declared here reactively
+            // (collected from viewModel.sceneNodes)
+        }
 
         // Top bar
         ARTopBar(
@@ -84,7 +117,7 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
                 .padding(top = 56.dp)
         )
 
-        // Color picker (shown on demand)
+        // AnimatedVisibility enter/exit kept from old version
         AnimatedVisibility(
             visible = uiState.showColorPicker,
             enter = fadeIn() + slideInVertically { it },
@@ -98,6 +131,9 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
             ColorPickerRow(
                 selectedColor = uiState.strokeColor,
                 onColorPicked = { color ->
+                    viewModel.uiState.value = uiState.copy(
+                        strokeColor = color, showColorPicker = false
+                    )
                     uiState = uiState.copy(
                         strokeColor = color,
                         showColorPicker = false
@@ -108,6 +144,18 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
 
         // Bottom toolbar
         ARBottomToolbar(
+            uiState             = uiState,
+            onToggleColorPicker = {
+                viewModel.uiState.value = uiState.copy(showColorPicker = !uiState.showColorPicker)
+            },
+            onSelectTool        = { tool ->
+                viewModel.uiState.value = uiState.copy(activeTool = tool)
+            },
+            onTogglePublic      = { isPublic ->
+                viewModel.uiState.value = uiState.copy(isPublicDrawing = isPublic)
+            },
+            onSave              = { /* TODO */ },
+            modifier            = Modifier
             uiState = uiState,
             onToggleColorPicker = { uiState = uiState.copy(showColorPicker = !uiState.showColorPicker) },
             onSelectTool = { tool -> uiState = uiState.copy(activeTool = tool) },
@@ -120,7 +168,8 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
     }
 }
 
-// Top bar
+// ── Private composables (unchanged from old version) ──────────────────────────
+
 @Composable
 private fun ARTopBar(
     canUndo  : Boolean,
@@ -213,6 +262,12 @@ private fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifie
 
 @Composable
 private fun ARBottomToolbar(
+    uiState             : ARDrawUIState,
+    onToggleColorPicker : () -> Unit,
+    onSelectTool        : (DrawingTool) -> Unit,
+    onTogglePublic      : (Boolean) -> Unit,
+    onSave              : () -> Unit,
+    modifier            : Modifier = Modifier,
     uiState: ARDrawUIState,
     onToggleColorPicker: () -> Unit,
     onSelectTool: (DrawingTool) -> Unit,
@@ -245,6 +300,23 @@ private fun ARBottomToolbar(
                     .clickable(onClick = onToggleColorPicker)
             )
 
+        // Tool buttons — each lights up in its own theme color when active
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            ToolButton(Icons.Outlined.Edit, "Brush", uiState.activeTool == DrawingTool.BRUSH)        { onSelectTool(DrawingTool.BRUSH) }
+            ToolButton(Icons.Outlined.AutoFixHigh, "Erase", uiState.activeTool == DrawingTool.ERASER) { onSelectTool(DrawingTool.ERASER) }
+            ToolButton(Icons.Outlined.SelectAll, "Select", uiState.activeTool == DrawingTool.SELECT)  { onSelectTool(DrawingTool.SELECT) }
+        }
+
+        IconToggleButton(
+            checked         = uiState.isPublicDrawing,
+            onCheckedChange = onTogglePublic
+        ) {
+            Icon(
+                imageVector        = if (uiState.isPublicDrawing) Icons.Outlined.Visibility
+                else Icons.Outlined.VisibilityOff,
+                contentDescription = if (uiState.isPublicDrawing) "Public" else "Private",
+                tint               = if (uiState.isPublicDrawing) ColorPrimary else ColorOnSurfaceMuted
+            )
             ToolButton(
                 icon = Icons.Outlined.Edit,
                 label = "Brush",
@@ -262,6 +334,18 @@ private fun ARBottomToolbar(
             )
         }
 
+        FilledTonalButton(
+            onClick = onSave,
+            shape   = RoundedCornerShape(20.dp),
+            colors  = ButtonDefaults.filledTonalButtonColors(
+                containerColor = ColorCloud.copy(alpha = 0.25f),
+                contentColor   = ColorCloud
+            )
+        ) {
+            Icon(Icons.Outlined.CloudUpload, null, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(4.dp))
+            Text("Save", style = MaterialTheme.typography.labelSmall)
+        }
         // ── BOTTOM MODE SWITCH (DRAW / PROFILE) ─────────────────────
         BottomModeSwitcher(
             drawSelected = true,

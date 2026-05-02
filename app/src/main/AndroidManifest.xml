@@ -2,9 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- OUTSIDE <application> — permissions and hardware requirements -->
+    <!-- Camera is required for AR -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Internet for Cloud Anchors + Firebase -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Declare that this app requires ARCore -->
     <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
 
     <application
@@ -17,11 +20,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Eureka">
 
-        <!-- INSIDE <application> — tells ARCore this app requires AR -->
+        <!-- Required: tells ARCore this app uses it -->
         <meta-data
             android:name="com.google.ar.core"
             android:value="required"
             tools:replace="android:value" />
+
+        <!-- Required: Cloud Anchor / ARCore API key -->
+        <meta-data
+            android:name="com.google.android.ar.API_KEY"
+            android:value="${ARCORE_API_KEY}" />
 
         <activity
             android:name=".MainActivity"

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.eureka" />
+                  <option name="mobileSdkAppId" value="1:219349543598:android:8d0f96a12c9cbade8e1b3f" />
+                  <option name="projectId" value="eureka-129e0" />
+                  <option name="projectNumber" value="219349543598" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
