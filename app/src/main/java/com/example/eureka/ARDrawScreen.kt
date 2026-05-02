@@ -63,6 +63,7 @@ fun ARDrawScreen(viewModel: ARDrawViewModel = hiltViewModel()) {
         viewModel.initialize(context)
     }
 // To draw the AR camera window
+    @Composable
 fun ARDrawScreen(onOpenProfile: () -> Unit) {
     var uiState by remember { mutableStateOf(ARDrawUIState()) }
 
@@ -161,7 +162,7 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
 // ── Private composables (unchanged from old version) ──────────────────────────
 
 @Composable
-private fun ARTopBar(
+fun ARTopBar(
     canUndo  : Boolean,
     canRedo  : Boolean,
     onUndo   : () -> Unit,
@@ -209,7 +210,7 @@ private fun ARTopBar(
 // Anchor status banner
 
 @Composable
-private fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifier) {
+fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alpha by infiniteTransition.animateFloat(
         initialValue  = 0.5f,
@@ -251,7 +252,7 @@ private fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifie
 // ── Bottom toolbar ────────────────────────────────────────────────────────────
 
 @Composable
-private fun ARBottomToolbar(
+fun ARBottomToolbar(
     uiState             : ARDrawUIState,
     onToggleColorPicker : () -> Unit,
     onSelectTool        : (DrawingTool) -> Unit,
@@ -348,7 +349,7 @@ private fun ARBottomToolbar(
 // Color picker strip
 
 @Composable
-private fun ColorPickerRow(selectedColor: Color, onColorPicked: (Color) -> Unit) {
+fun ColorPickerRow(selectedColor: Color, onColorPicked: (Color) -> Unit) {
     val palette = listOf(
         ColorStrokeDefault, ColorStrokeWhite, ColorStrokeGold,
         ColorStrokePurple, ColorStrokeGreen, ColorAccent
