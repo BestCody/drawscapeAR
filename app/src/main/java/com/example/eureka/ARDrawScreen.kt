@@ -64,7 +64,7 @@ fun ARDrawScreen(viewModel: ARDrawViewModel = hiltViewModel()) {
         viewModel.initialize(context)
     }
 // To draw the AR camera window
-    @Composable
+@Composable
 fun ARDrawScreen(onOpenProfile: () -> Unit) {
     var uiState by remember { mutableStateOf(ARDrawUIState()) }
 
@@ -250,100 +250,61 @@ fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifier) {
 
 // ── Bottom toolbar ────────────────────────────────────────────────────────────
 
-@Composable
-fun ARBottomToolbar(
-    uiState             : ARDrawUIState,
-    onToggleColorPicker : () -> Unit,
-    onSelectTool        : (DrawingTool) -> Unit,
-    onTogglePublic      : (Boolean) -> Unit,
-    onSave              : () -> Unit,
-    modifier            : Modifier = Modifier,
-    uiState: ARDrawUIState,
-    onToggleColorPicker: () -> Unit,
-    onSelectTool: (DrawingTool) -> Unit,
-    onOpenProfile: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    @Composable
+    fun ARBottomToolbar(
+        uiState: ARDrawUIState,
+        onToggleColorPicker: () -> Unit,
+        onSelectTool: (DrawingTool) -> Unit,
+        onTogglePublic: (Boolean) -> Unit,
+        onSave: () -> Unit,
+        onOpenProfile: () -> Unit,
+        modifier: Modifier = Modifier
     ) {
+        Column(modifier = modifier) {
 
-        // ── TOP TOOL ROW (WHITE CHROME) ─────────────────────────────
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(28.dp))
-                .background(Color.White.copy(alpha = 0.95f))
-                .padding(horizontal = 18.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            // Color picker trigger
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(uiState.strokeColor)
-                    .border(2.dp, Color.Black, CircleShape)
-                    .clickable(onClick = onToggleColorPicker)
-            )
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color.White)
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-        // Tool buttons — each lights up in its own theme color when active
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            ToolButton(Icons.Outlined.Edit, "Brush", uiState.activeTool == DrawingTool.BRUSH)        { onSelectTool(DrawingTool.BRUSH) }
-            ToolButton(Icons.Outlined.AutoFixHigh, "Erase", uiState.activeTool == DrawingTool.ERASER) { onSelectTool(DrawingTool.ERASER) }
-            ToolButton(Icons.Outlined.SelectAll, "Select", uiState.activeTool == DrawingTool.SELECT)  { onSelectTool(DrawingTool.SELECT) }
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(uiState.strokeColor)
+                        .clickable { onToggleColorPicker() }
+                )
+
+                ToolButton(Icons.Outlined.Edit, "Brush",
+                    uiState.activeTool == DrawingTool.BRUSH
+                ) { onSelectTool(DrawingTool.BRUSH) }
+
+                ToolButton(Icons.Outlined.AutoFixHigh, "Eraser",
+                    uiState.activeTool == DrawingTool.ERASER
+                ) { onSelectTool(DrawingTool.ERASER) }
+
+                IconToggleButton(
+                    checked = uiState.isPublicDrawing,
+                    onCheckedChange = onTogglePublic
+                ) {
+                    Icon(Icons.Outlined.Visibility, null)
+                }
+
+                Button(onClick = onSave) {
+                    Text("Save")
+                }
+            }
+
+            BottomModeSwitcher(
+                drawSelected = true,
+                onDrawClick = {},
+                onProfileClick = onOpenProfile
+            )
         }
-
-        IconToggleButton(
-            checked         = uiState.isPublicDrawing,
-            onCheckedChange = onTogglePublic
-        ) {
-            Icon(
-                imageVector        = if (uiState.isPublicDrawing) Icons.Outlined.Visibility
-                else Icons.Outlined.VisibilityOff,
-                contentDescription = if (uiState.isPublicDrawing) "Public" else "Private",
-                tint               = if (uiState.isPublicDrawing) ColorPrimary else ColorOnSurfaceMuted
-            )
-            ToolButton(
-                icon = Icons.Outlined.Edit,
-                label = "Brush",
-                selected = uiState.activeTool == DrawingTool.BRUSH,
-                activeColor = ColorBrush,
-                onClick = { onSelectTool(DrawingTool.BRUSH) }
-            )
-
-            ToolButton(
-                icon = Icons.Outlined.AutoFixHigh,
-                label = "Eraser",
-                selected = uiState.activeTool == DrawingTool.ERASER,
-                activeColor = ColorEraser,
-                onClick = { onSelectTool(DrawingTool.ERASER) }
-            )
-        }
-
-        FilledTonalButton(
-            onClick = onSave,
-            shape   = RoundedCornerShape(20.dp),
-            colors  = ButtonDefaults.filledTonalButtonColors(
-                containerColor = ColorCloud.copy(alpha = 0.25f),
-                contentColor   = ColorCloud
-            )
-        ) {
-            Icon(Icons.Outlined.CloudUpload, null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
-            Text("Save", style = MaterialTheme.typography.labelSmall)
-        }
-        // ── BOTTOM MODE SWITCH (DRAW / PROFILE) ─────────────────────
-        BottomModeSwitcher(
-            drawSelected = true,
-            onDrawClick = { /* already in draw */ },
-            onProfileClick = onOpenProfile
-        )
     }
-}
 
 // Color picker strip
 @Composable
