@@ -1,5 +1,7 @@
 package com.example.eureka
+
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ar.core.Frame
@@ -10,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-import androidx.compose.runtime.mutableStateOf
 import kotlin.math.sqrt
 
 fun distance(a: FloatArray, b: FloatArray): Float {
@@ -22,11 +23,13 @@ fun distance(a: FloatArray, b: FloatArray): Float {
 
 sealed class DrawingState {
     object Idle : DrawingState()
+
     data class Drawing(
-        val currentStrokeId : String,
-        val points          : MutableList<FloatArray>
+        val currentStrokeId: String,
+        val points: MutableList<FloatArray>
     ) : DrawingState()
 }
+
 @HiltViewModel
 class ARDrawViewModel @Inject constructor(
     private val strokeRepository: StrokeRepository
@@ -34,111 +37,164 @@ class ARDrawViewModel @Inject constructor(
 
     private var handTracker: HandTracker? = null
     private var cloudAnchorManager: CloudAnchorManager? = null
+    private var strokeRenderer: StrokeRenderer? = null
 
-    val uiState      = mutableStateOf(ARDrawUIState())
+    val uiState = mutableStateOf(ARDrawUIState())
     val drawingState = mutableStateOf<DrawingState>(DrawingState.Idle)
 
-    // Nodes to add to the SceneView scene, collected as state
+    // Scene nodes rendered by ARSceneView
     val sceneNodes = MutableStateFlow<List<() -> Unit>>(emptyList())
 
-    private var spaceId   = ""
+    private var spaceId: String = ""
     private var anchorPose: Pose? = null
-    private var userId    = ""
+    private var userId: String = ""
+    private var latestFrame: Frame? = null
 
     fun initialize(context: Context) {
         handTracker = HandTracker(context).also { tracker ->
-            tracker.onResult = { fingerPoint -> handleFingerPoint(fingerPoint) }
+            tracker.onResult = { fingerPoint ->
+                handleFingerPoint(fingerPoint)
+            }
         }
-        viewModelScope.launch { userId = ensureSignedIn() }
+
+        viewModelScope.launch {
+            userId = ensureSignedIn()
+        }
+    }
+
+    fun setAnchorData(
+        pose: Pose,
+        newSpaceId: String
+    ) {
+        anchorPose = pose
+        spaceId = newSpaceId
+        uiState.value = uiState.value.copy(isAnchored = true)
+
+        startObservingStrokes()
+    }
+
+    fun setStrokeRenderer(renderer: StrokeRenderer) {
+        strokeRenderer = renderer
     }
 
     fun onFrameUpdated(frame: Frame) {
-        // Feed frame to MediaPipe
+        latestFrame = frame
+
         try {
             if (frame.camera.trackingState == TrackingState.TRACKING) {
                 frame.acquireCameraImage().use { image ->
-                    handTracker?.processFrame(image.toBitmap(), frame.timestamp / 1_000_000)
+                    handTracker?.processFrame(
+                        image.toBitmap(),
+                        frame.timestamp / 1_000_000
+                    )
                 }
             }
-        } catch (e: Exception) { /* ignore */ }
+        } catch (_: Exception) {
+        }
 
-        // Check cloud anchor status
         cloudAnchorManager?.checkHostingStatus()
         cloudAnchorManager?.checkResolvingStatus()
-
-        latestFrame = frame
     }
-
-    private var latestFrame: Frame? = null
 
     private fun handleFingerPoint(fingerPoint: FingerPoint) {
         if (!fingerPoint.isTracking) {
-            if (drawingState.value is DrawingState.Drawing) finalizeStroke()
+            if (drawingState.value is DrawingState.Drawing) {
+                finalizeStroke()
+            }
             return
         }
 
         val frame = latestFrame ?: return
-        val pose  = anchorPose  ?: return
+        val pose = anchorPose ?: return
 
-        val worldPoint = projectFingerToWorldAtDepth(frame, fingerPoint.x, fingerPoint.y)
+        val worldPoint = projectFingerToWorldAtDepth(
+            frame,
+            fingerPoint.x,
+            fingerPoint.y
+        )
+
         val localPoint = worldToAnchorRelative(worldPoint, pose)
+
         onFingerMoved(localPoint)
     }
 
     private fun onFingerMoved(localPoint: FloatArray) {
         when (val state = drawingState.value) {
+
             is DrawingState.Idle -> {
-                val newId = UUID.randomUUID().toString()
-                drawingState.value = DrawingState.Drawing(newId, mutableListOf(localPoint))
+                drawingState.value = DrawingState.Drawing(
+                    currentStrokeId = UUID.randomUUID().toString(),
+                    points = mutableListOf(localPoint)
+                )
             }
+
             is DrawingState.Drawing -> {
                 val last = state.points.lastOrNull()
+
                 if (last == null || distance(last, localPoint) > 0.01f) {
-                    state.points.add(localPoint)
-                    // Trigger recomposition to update the live stroke
-                    updateLiveStrokeNodes(state)
+                    val updatedPoints =
+                        (state.points + listOf(localPoint)).toMutableList()
+
+                    val updatedState = state.copy(points = updatedPoints)
+
+                    drawingState.value = updatedState
+
+                    updateLiveStrokeNodes(updatedState)
                 }
             }
         }
     }
-    private var strokeRenderer: StrokeRenderer? = null
-    strokeRepository.observeStrokes(spaceId, userId).collect { strokes ->
-        val pose = anchorPose ?: return@collect
-        strokes.forEach { stroke ->
-            strokeRenderer?.renderStroke(stroke)
-        }
-    }
 
     private fun updateLiveStrokeNodes(state: DrawingState.Drawing) {
-        // Emit updated node list — ARSceneView recomposes and renders them
-        // Implementation depends on your node management strategy
+        // Replace with actual SceneView node generation if desired
+        sceneNodes.value = emptyList()
     }
 
     private fun finalizeStroke() {
         val state = drawingState.value as? DrawingState.Drawing ?: return
+
         drawingState.value = DrawingState.Idle
+
         if (state.points.size < 2) return
+        if (spaceId.isBlank()) return
+        if (userId.isBlank()) return
 
         val stroke = Stroke(
-            id       = state.currentStrokeId,
-            points   = state.points.toList(),
-            color    = uiState.value.strokeColor,
-            width    = uiState.value.strokeWidth,
+            id = state.currentStrokeId,
+            points = state.points.toList(),
+            color = uiState.value.strokeColor,
+            width = uiState.value.strokeWidth,
             authorId = userId,
             isPublic = uiState.value.isPublicDrawing
         )
 
-        viewModelScope.launch { strokeRepository.saveStroke(spaceId, stroke) }
+        viewModelScope.launch {
+            strokeRepository.saveStroke(spaceId, stroke)
+        }
     }
 
     fun startObservingStrokes() {
+        if (spaceId.isBlank() || userId.isBlank()) return
+
         viewModelScope.launch {
             strokeRepository.observeStrokes(spaceId, userId).collect { strokes ->
                 val pose = anchorPose ?: return@collect
-                // Convert anchor-relative → world space, then update sceneNodes state
-                // SceneView 4 will recompose and render the updated nodes
+
+                strokes.forEach { stroke ->
+                    strokeRenderer?.renderStroke(stroke)
+                }
+
+                // Optional: rebuild sceneNodes here if renderer is node-based
             }
         }
+    }
+
+    fun undo() {
+        // TODO: Implement undo logic
+    }
+
+    fun redo() {
+        // TODO: Implement redo logic
     }
 
     override fun onCleared() {
