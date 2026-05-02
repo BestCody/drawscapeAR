@@ -25,6 +25,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import io.github.sceneview.ar.ARSceneView
 import android.Manifest
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.zIndex
 import com.example.eureka.theme.*
 
 // Define all drawing tools
@@ -69,7 +71,6 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // ✅ SceneView 4: ARSceneView is a pure Composable (no AndroidView wrapper)
         ARSceneView(
             modifier = Modifier.fillMaxSize(),
             planeRenderer = true,
@@ -93,7 +94,6 @@ fun ARDrawScreen(onOpenProfile: () -> Unit) {
             canRedo  = uiState.redoStack > 0,
             onUndo   = { uiState = uiState.copy(undoStack = (uiState.undoStack - 1).coerceAtLeast(0)) },
             onRedo   = { uiState = uiState.copy(redoStack = (uiState.redoStack - 1).coerceAtLeast(0)) },
-            onExit   = { /* TODO: wire up navigation callback */ },
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .statusBarsPadding()
@@ -347,7 +347,6 @@ fun ARBottomToolbar(
 }
 
 // Color picker strip
-
 @Composable
 fun ColorPickerRow(selectedColor: Color, onColorPicked: (Color) -> Unit) {
     val palette = listOf(
@@ -474,4 +473,6 @@ fun BottomModeSwitcher(
             )
         }
     }
+}
+}
 }
