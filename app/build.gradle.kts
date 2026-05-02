@@ -1,12 +1,8 @@
-
-
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
-
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.legacy.kapt)
     id("com.google.gms.google-services")
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -61,7 +57,7 @@ dependencies {
     implementation("io.github.sceneview:arsceneview:4.0.1")            // conflict → new wins
 
     // ── Hand Tracking ─────────────────────────────────────────
-    implementation("com.google.mediapipe:tasks-vision:0.10.34")        // conflict → new wins
+    implementation("com.google.mediapipe:tasks-vision:0.10.33")        // Downgraded to 0.10.33 as 0.10.34 is not on Maven
 
     // ── Firebase ──────────────────────────────────────────────
     // KTX suffixes removed from BoM since v34.0.0 (July 2025)
