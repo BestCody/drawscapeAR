@@ -1,5 +1,6 @@
-package com.example.eureka.ui.screens.ar
+package com.example.eureka
 
+import android.view.View
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -17,9 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.eureka.ui.theme.*
+import com.example.eureka.theme.ColorAccent
+import com.example.eureka.theme.ColorOnSurface
+import com.example.eureka.theme.ColorOnSurfaceMuted
+import com.example.eureka.theme.ColorPrimary
+import com.example.eureka.theme.ColorStrokeDefault
+import com.example.eureka.theme.ColorStrokeGold
+import com.example.eureka.theme.ColorStrokeGreen
+import com.example.eureka.theme.ColorStrokePurple
+import com.example.eureka.theme.ColorStrokeWhite
+import com.example.eureka.theme.ColorSurface
 
 enum class DrawingTool { BRUSH, ERASER, SELECT }
 
@@ -35,7 +46,7 @@ data class ARDrawUIState(
 )
 
 @Composable
-fun ARDrawScreen(onExit: () -> Unit) {
+fun ARDrawScreen() {
     var uiState by remember { mutableStateOf(ARDrawUIState()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -43,7 +54,7 @@ fun ARDrawScreen(onExit: () -> Unit) {
         // AR surface — replace AndroidView content with ArSceneView when ready
         AndroidView(
             factory  = { ctx ->
-                android.view.View(ctx).apply {
+                View(ctx).apply {
                     setBackgroundColor(android.graphics.Color.BLACK)
                 }
             },
@@ -56,15 +67,6 @@ fun ARDrawScreen(onExit: () -> Unit) {
                 .align(Alignment.TopCenter)
                 .statusBarsPadding()
                 .padding(top = 56.dp)
-        )
-
-        ARTopBar(
-            onExit   = onExit,
-            canUndo  = uiState.undoStack > 0,
-            canRedo  = uiState.redoStack > 0,
-            onUndo   = { },
-            onRedo   = { },
-            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding()
         )
 
         AnimatedVisibility(
@@ -99,7 +101,6 @@ fun ARDrawScreen(onExit: () -> Unit) {
 
 @Composable
 private fun ARTopBar(
-    onExit   : () -> Unit,
     canUndo  : Boolean,
     canRedo  : Boolean,
     onUndo   : () -> Unit,
@@ -111,9 +112,6 @@ private fun ARTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment     = Alignment.CenterVertically
     ) {
-        GlassIconButton(onClick = onExit) {
-            Icon(Icons.Filled.Close, "Exit", tint = ColorOnSurface)
-        }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             GlassIconButton(onClick = onUndo, enabled = canUndo) {
                 Icon(Icons.Outlined.Undo, "Undo", tint = if (canUndo) ColorOnSurface else ColorOnSurfaceMuted)
@@ -251,7 +249,7 @@ private fun GlassIconButton(onClick: () -> Unit, enabled: Boolean = true, conten
 
 @Composable
 private fun ToolButton(
-    icon     : androidx.compose.ui.graphics.vector.ImageVector,
+    icon     : ImageVector,
     label    : String,
     selected : Boolean,
     onClick  : () -> Unit,

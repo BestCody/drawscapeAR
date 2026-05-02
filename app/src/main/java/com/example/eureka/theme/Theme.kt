@@ -1,10 +1,9 @@
-package com.example.eureka.ui.theme
+package com.example.eureka.theme
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val ColorBackground       = Color(0xFF0A0A0F)
 val ColorSurface          = Color(0xFF14141C)
 val ColorSurfaceVariant   = Color(0xFF1E1E2A)
 val ColorPrimary          = Color(0xFF6EE7F7)
@@ -20,10 +19,7 @@ val ColorStrokeGreen      = Color(0xFF69F0AE)
 
 private val DarkColorScheme = darkColorScheme(
     primary          = ColorPrimary,
-    onPrimary        = ColorBackground,
     secondary        = ColorStrokeGold,
-    onSecondary      = ColorBackground,
-    background       = ColorBackground,
     onBackground     = ColorOnSurface,
     surface          = ColorSurface,
     onSurface        = ColorOnSurface,
