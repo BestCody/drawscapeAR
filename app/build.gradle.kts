@@ -10,11 +10,12 @@ android {
 
     defaultConfig {
         applicationId = "com.example.eureka"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["ARCORE_API_KEY"] = "AIzaSyClCq6DrEIFSfdKXOZurPfDFqkOLnaUuds"
     }
 
     buildTypes {
@@ -35,11 +36,12 @@ android {
     buildFeatures {
         compose = true
     }
+    // composeOptions block not needed with Kotlin 2.x + Compose Compiler Gradle plugin
 }
 
 dependencies {
 
-    // ── Your existing dependencies (kept as-is) ───────────────
+    // ── Compose + AndroidX (existing) ─────────────────────────
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -50,21 +52,33 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // ── AR + 3D Rendering ─────────────────────────────────────
-    implementation("io.github.sceneview:arsceneview:2.3.3")
+    // ⚠️ 4.x: ARSceneView is now a @Composable, not a View
+    implementation("io.github.sceneview:arsceneview:4.0.1")            // conflict → new wins
 
     // ── Hand Tracking ─────────────────────────────────────────
-    implementation("com.google.mediapipe:tasks-vision:0.10.20")
+    implementation("com.google.mediapipe:tasks-vision:0.10.34")        // conflict → new wins
 
     // ── Firebase ──────────────────────────────────────────────
+    // KTX suffixes removed from BoM since v34.0.0 (July 2025)
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth")
 
     // ── Coroutines ────────────────────────────────────────────
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")  // conflict → new wins
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0") // existing, no conflict
 
-    // ── Testing (your existing) ───────────────────────────────
+    // ── ViewModel + Compose ───────────────────────────────────
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.0")     // new addition
+
+    // ── Permissions ───────────────────────────────────────────
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")    // new addition
+
+    // ── Navigation ────────────────────────────────────────────
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // ── Testing (existing) ────────────────────────────────────
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -72,7 +86,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.material:material-icons-extended")
 }
