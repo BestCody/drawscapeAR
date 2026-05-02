@@ -1,5 +1,5 @@
 package com.example.eureka
-import com.google.ar.core.Config
+import android.Manifest
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,15 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.example.eureka.theme.*
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.ar.core.Config
 import io.github.sceneview.ar.ARSceneView
-import android.Manifest
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.ui.zIndex
-import com.example.eureka.theme.*
 
 // Define all drawing tools
 enum class DrawingTool { BRUSH, ERASER, SELECT }
