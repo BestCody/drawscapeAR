@@ -34,9 +34,7 @@ fun AppRoot() {
         AppScreen.DRAW -> {
             ARDrawScreen(
                 onOpenProfile = {
-                    currentScreen =
-                        if (isLoggedIn) AppScreen.PROFILE
-                        else AppScreen.AUTH
+                    currentScreen = AppScreen.PROFILE
                 }
             )
         }
