@@ -381,7 +381,7 @@ private fun ColorPickerRow(selectedColor: Color, onColorPicked: (Color) -> Unit)
 // Glass icon button
 
 @Composable
-private fun GlassIconButton(
+fun GlassIconButton(
     onClick  : () -> Unit,
     enabled  : Boolean = true,
     content  : @Composable () -> Unit,
@@ -399,7 +399,7 @@ private fun GlassIconButton(
 // Tool button
 
 @Composable
-private fun ToolButton(
+fun ToolButton(
     icon: ImageVector,
     label: String,
     selected: Boolean,
