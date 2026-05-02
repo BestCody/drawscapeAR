@@ -1,4 +1,7 @@
 package com.example.eureka
 
-class DrawscapeApplication {
-}
+import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class DrawscapeApplication : Application()
