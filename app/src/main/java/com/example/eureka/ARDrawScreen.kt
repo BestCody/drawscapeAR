@@ -25,20 +25,10 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import io.github.sceneview.ar.ARSceneView
 import android.Manifest
-import com.example.eureka.theme.ColorAccent
-import com.example.eureka.theme.ColorOnSurface
-import com.example.eureka.theme.ColorOnSurfaceMuted
-import com.example.eureka.theme.ColorPrimary
-import com.example.eureka.theme.ColorStrokeDefault
-import com.example.eureka.theme.ColorStrokeGold
-import com.example.eureka.theme.ColorStrokeGreen
-import com.example.eureka.theme.ColorStrokePurple
-import com.example.eureka.theme.ColorStrokeWhite
-import com.example.eureka.theme.ColorSurface
+import com.example.eureka.theme.*
 
 // Define all drawing tools
 enum class DrawingTool { BRUSH, ERASER, SELECT }
-
 
 data class ARDrawUIState(
     val activeTool      : DrawingTool = DrawingTool.BRUSH,
