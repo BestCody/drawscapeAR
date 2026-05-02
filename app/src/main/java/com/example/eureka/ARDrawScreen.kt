@@ -1,6 +1,7 @@
 package com.example.eureka
 
 import android.view.View
+import androidx.compose.ui.zIndex
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -47,7 +48,7 @@ private val toolConfig = mapOf(
 
 @Composable
 // To draw the AR camera window
-fun ARDrawScreen() {
+fun ARDrawScreen(onOpenProfile: () -> Unit) {
     var uiState by remember { mutableStateOf(ARDrawUIState()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -85,29 +86,33 @@ fun ARDrawScreen() {
 
         // Color picker (shown on demand)
         AnimatedVisibility(
-            visible  = uiState.showColorPicker,
-            enter    = fadeIn() + slideInVertically { it },
-            exit     = fadeOut() + slideOutVertically { it },
+            visible = uiState.showColorPicker,
+            enter = fadeIn() + slideInVertically { it },
+            exit = fadeOut() + slideOutVertically { it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 96.dp)
+                .padding(bottom = 160.dp)
+                .zIndex(10f) // ensures it renders above toolbar
         ) {
             ColorPickerRow(
                 selectedColor = uiState.strokeColor,
                 onColorPicked = { color ->
-                    uiState = uiState.copy(strokeColor = color, showColorPicker = false)
+                    uiState = uiState.copy(
+                        strokeColor = color,
+                        showColorPicker = false
+                    )
                 }
             )
         }
 
         // Bottom toolbar
         ARBottomToolbar(
-            uiState             = uiState,
+            uiState = uiState,
             onToggleColorPicker = { uiState = uiState.copy(showColorPicker = !uiState.showColorPicker) },
-            onSelectTool        = { tool -> uiState = uiState.copy(activeTool = tool) },
-            onSave              = { },
-            modifier            = Modifier
+            onSelectTool = { tool -> uiState = uiState.copy(activeTool = tool) },
+            onOpenProfile = onOpenProfile,
+            modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
                 .padding(16.dp)
@@ -208,59 +213,61 @@ private fun AnchorStatusBanner(isAnchored: Boolean, modifier: Modifier = Modifie
 
 @Composable
 private fun ARBottomToolbar(
-    uiState             : ARDrawUIState,
-    onToggleColorPicker : () -> Unit,
-    onSelectTool        : (DrawingTool) -> Unit,
-    onSave              : () -> Unit,
-    modifier            : Modifier = Modifier,
+    uiState: ARDrawUIState,
+    onToggleColorPicker: () -> Unit,
+    onSelectTool: (DrawingTool) -> Unit,
+    onOpenProfile: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .background(Color.White.copy(alpha = 1f))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment     = Alignment.CenterVertically
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Stroke color swatch
-        Box(
+
+        // ── TOP TOOL ROW (WHITE CHROME) ─────────────────────────────
+        Row(
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(uiState.strokeColor)
-                .border(2.dp, Color.Black.copy(alpha = 1f), CircleShape)
-                .clickable(onClick = onToggleColorPicker)
-        )
-
-        // Tool buttons — each lights up in its own theme color when active
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            toolConfig.forEach { (tool, config) ->
-                val (toolColor, toolIcon) = config
-                ToolButton(
-                    icon     = toolIcon,
-                    label    = tool.name,
-                    selected = uiState.activeTool == tool,
-                    // The active background tint uses that tool's specific color
-                    activeColor = toolColor,
-                    onClick  = { onSelectTool(tool) }
-                )
-            }
-        }
-
-        // Save button
-        FilledTonalButton(
-            onClick = onSave,
-            shape   = RoundedCornerShape(20.dp),
-            colors  = ButtonDefaults.filledTonalButtonColors(
-                containerColor = ColorCloud.copy(alpha = 0.25f),
-                contentColor   = ColorCloud
-            )
+                .clip(RoundedCornerShape(28.dp))
+                .background(Color.White.copy(alpha = 0.95f))
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Outlined.CloudUpload, null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
-            Text("Save", style = MaterialTheme.typography.labelSmall)
+
+            // Color picker trigger
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(uiState.strokeColor)
+                    .border(2.dp, Color.Black, CircleShape)
+                    .clickable(onClick = onToggleColorPicker)
+            )
+
+            ToolButton(
+                icon = Icons.Outlined.Edit,
+                label = "Brush",
+                selected = uiState.activeTool == DrawingTool.BRUSH,
+                activeColor = ColorBrush,
+                onClick = { onSelectTool(DrawingTool.BRUSH) }
+            )
+
+            ToolButton(
+                icon = Icons.Outlined.AutoFixHigh,
+                label = "Eraser",
+                selected = uiState.activeTool == DrawingTool.ERASER,
+                activeColor = ColorEraser,
+                onClick = { onSelectTool(DrawingTool.ERASER) }
+            )
         }
+
+        // ── BOTTOM MODE SWITCH (DRAW / PROFILE) ─────────────────────
+        BottomModeSwitcher(
+            drawSelected = true,
+            onDrawClick = { /* already in draw */ },
+            onProfileClick = onOpenProfile
+        )
     }
 }
 
@@ -329,9 +336,7 @@ private fun ToolButton(
         modifier = Modifier
             .size(40.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(
-                if (selected) activeColor else Color.Transparent
-            )
+            .background(if (selected) activeColor else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -341,5 +346,57 @@ private fun ToolButton(
             tint = Color.Black,
             modifier = Modifier.size(20.dp)
         )
+    }
+}
+
+@Composable
+fun BottomModeSwitcher(
+    drawSelected: Boolean,
+    onDrawClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(40.dp))
+            .background(Color.Black.copy(alpha = 0.85f))
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+
+        // DRAW
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(
+                    if (drawSelected) ColorBrush else Color.White
+                )
+                .clickable(onClick = onDrawClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Outlined.Edit,
+                contentDescription = "Draw",
+                tint = if (drawSelected) Color.White else Color.Black
+            )
+        }
+
+        // PROFILE
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(
+                    if (!drawSelected) ColorCloud else Color.White
+                )
+                .clickable(onClick = onProfileClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Outlined.Person,
+                contentDescription = "Profile",
+                tint = if (!drawSelected) Color.White else Color.Black
+            )
+        }
     }
 }
