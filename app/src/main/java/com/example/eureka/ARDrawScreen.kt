@@ -50,114 +50,6 @@ private val toolConfig = mapOf(
     DrawingTool.SELECT to Pair(ColorFiller, Icons.Outlined.SelectAll),
 )
 
-@Composable
-fun ARDrawScreen(viewModel: ARDrawViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState
-    val context = LocalContext.current
-
-    // Camera permission — kept from old version
-    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
-    LaunchedEffect(Unit) {
-        if (!cameraPermission.status.isGranted) {
-            cameraPermission.launchPermissionRequest()
-        }
-        viewModel.initialize(context)
-    }
-// To draw the AR camera window
-@Composable
-fun ARDrawScreen(onOpenProfile: () -> Unit) {
-    var uiState by remember { mutableStateOf(ARDrawUIState()) }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        ARSceneView(
-            modifier = Modifier.fillMaxSize(),
-            planeRenderer = true,
-            sessionConfiguration = { _, config ->
-                config.cloudAnchorMode     = Config.CloudAnchorMode.ENABLED
-                config.planeFindingMode    = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-                config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
-                config.geospatialMode      = Config.GeospatialMode.ENABLED
-            },
-            onSessionUpdated = { _, frame ->
-                viewModel.onFrameUpdated(frame)
-            }
-        ) {
-            // Stroke nodes declared here reactively
-            // (collected from viewModel.sceneNodes)
-        }
-
-        // Top bar
-        ARTopBar(
-            canUndo  = uiState.undoStack > 0,
-            canRedo  = uiState.redoStack > 0,
-            onUndo   = { uiState = uiState.copy(undoStack = (uiState.undoStack - 1).coerceAtLeast(0)) },
-            onRedo   = { uiState = uiState.copy(redoStack = (uiState.redoStack - 1).coerceAtLeast(0)) },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-        )
-
-        // Anchor status banner
-        AnchorStatusBanner(
-            isAnchored = uiState.isAnchored,
-            modifier   = Modifier
-                .align(Alignment.TopCenter)
-                .statusBarsPadding()
-                .padding(top = 56.dp)
-        )
-
-        // AnimatedVisibility enter/exit kept from old version
-        AnimatedVisibility(
-            visible = uiState.showColorPicker,
-            enter = fadeIn() + slideInVertically { it },
-            exit = fadeOut() + slideOutVertically { it },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 160.dp)
-                .zIndex(10f) // ensures it renders above toolbar
-        ) {
-            ColorPickerRow(
-                selectedColor = uiState.strokeColor,
-                onColorPicked = { color ->
-                    viewModel.uiState.value = uiState.copy(
-                        strokeColor = color, showColorPicker = false
-                    )
-                    uiState = uiState.copy(
-                        strokeColor = color,
-                        showColorPicker = false
-                    )
-                }
-            )
-        }
-
-        // Bottom toolbar
-        ARBottomToolbar(
-            uiState             = uiState,
-            onToggleColorPicker = {
-                viewModel.uiState.value = uiState.copy(showColorPicker = !uiState.showColorPicker)
-            },
-            onSelectTool        = { tool ->
-                viewModel.uiState.value = uiState.copy(activeTool = tool)
-            },
-            onTogglePublic      = { isPublic ->
-                viewModel.uiState.value = uiState.copy(isPublicDrawing = isPublic)
-            },
-            onSave              = { /* TODO */ },
-            modifier            = Modifier
-            uiState = uiState,
-            onToggleColorPicker = { uiState = uiState.copy(showColorPicker = !uiState.showColorPicker) },
-            onSelectTool = { tool -> uiState = uiState.copy(activeTool = tool) },
-            onOpenProfile = onOpenProfile,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(16.dp)
-        )
-    }
-}
-
 // ── Private composables (unchanged from old version) ──────────────────────────
 
 @Composable
@@ -434,5 +326,119 @@ fun BottomModeSwitcher(
         }
     }
 }
-}
+@Composable
+fun ARDrawScreen(viewModel: ARDrawViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState
+    val context = LocalContext.current
+
+    // Camera permission — kept from old version
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+    LaunchedEffect(Unit) {
+        if (!cameraPermission.status.isGranted) {
+            cameraPermission.launchPermissionRequest()
+        }
+        viewModel.initialize(context)
+    }
+
+    // To draw the AR camera window
+    @Composable
+    fun ARDrawScreen(onOpenProfile: () -> Unit) {
+        var uiState by remember { mutableStateOf(ARDrawUIState()) }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+
+            ARSceneView(
+                modifier = Modifier.fillMaxSize(),
+                planeRenderer = true,
+                sessionConfiguration = { _, config ->
+                    config.cloudAnchorMode = Config.CloudAnchorMode.ENABLED
+                    config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+                    config.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
+                    config.geospatialMode = Config.GeospatialMode.ENABLED
+                },
+                onSessionUpdated = { _, frame ->
+                    viewModel.onFrameUpdated(frame)
+                }
+            ) {
+                // Stroke nodes declared here reactively
+                // (collected from viewModel.sceneNodes)
+            }
+
+            // Top bar
+            ARTopBar(
+                canUndo = uiState.undoStack > 0,
+                canRedo = uiState.redoStack > 0,
+                onUndo = {
+                    uiState = uiState.copy(undoStack = (uiState.undoStack - 1).coerceAtLeast(0))
+                },
+                onRedo = {
+                    uiState = uiState.copy(redoStack = (uiState.redoStack - 1).coerceAtLeast(0))
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+            )
+
+            // Anchor status banner
+            AnchorStatusBanner(
+                isAnchored = uiState.isAnchored,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 56.dp)
+            )
+
+            // AnimatedVisibility enter/exit kept from old version
+            AnimatedVisibility(
+                visible = uiState.showColorPicker,
+                enter = fadeIn() + slideInVertically { it },
+                exit = fadeOut() + slideOutVertically { it },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 160.dp)
+                    .zIndex(10f) // ensures it renders above toolbar
+            ) {
+                ColorPickerRow(
+                    selectedColor = uiState.strokeColor,
+                    onColorPicked = { color ->
+                        viewModel.uiState.value = uiState.copy(
+                            strokeColor = color, showColorPicker = false
+                        )
+                        uiState = uiState.copy(
+                            strokeColor = color,
+                            showColorPicker = false
+                        )
+                    }
+                )
+            }
+
+            // Bottom toolbar
+            ARBottomToolbar(
+                uiState = uiState,
+                onToggleColorPicker = {
+                    viewModel.uiState.value =
+                        uiState.copy(showColorPicker = !uiState.showColorPicker)
+                },
+                onSelectTool = { tool ->
+                    viewModel.uiState.value = uiState.copy(activeTool = tool)
+                },
+                onTogglePublic = { isPublic ->
+                    viewModel.uiState.value = uiState.copy(isPublicDrawing = isPublic)
+                },
+                onSave = { /* TODO */ },
+                modifier = Modifier
+                        uiState = uiState,
+                onToggleColorPicker = {
+                    uiState = uiState.copy(showColorPicker = !uiState.showColorPicker)
+                },
+                onSelectTool = { tool -> uiState = uiState.copy(activeTool = tool) },
+                onOpenProfile = onOpenProfile,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(16.dp)
+            )
+        }
+    }
 }
