@@ -1,15 +1,10 @@
 package com.example.eureka
-import com.example.eureka.ARDrawUIState
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ar.core.Frame
 import com.google.ar.core.Pose
 import com.google.ar.core.TrackingState
-import com.example.eureka.HandTracker
-import com.example.eureka.FingerPoint
-import com.example.eureka.projectFingerToWorldAtDepth
-import com.example.eureka.worldToAnchorRelative
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
