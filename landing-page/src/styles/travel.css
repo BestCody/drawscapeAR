@@ -1,0 +1,160 @@
+.travel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+}
+.travel-overlay.is-active { pointer-events: auto; }
+.travel-overlay.phase-enter,
+.travel-overlay.phase-hold,
+.travel-overlay.phase-exit { opacity: 1; }
+
+/* ---------- background ---------- */
+.travel-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, #0a0a0c 0%, #000 70%);
+}
+.phase-enter .travel-bg { animation: bg-in 0.8s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
+.phase-exit  .travel-bg { animation: bg-out 0.7s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
+
+@keyframes bg-in {
+  from { clip-path: circle(0% at 50% 50%); }
+  to   { clip-path: circle(150% at 50% 50%); }
+}
+@keyframes bg-out {
+  from { clip-path: circle(150% at 50% 50%); }
+  to   { clip-path: circle(0% at 50% 50%); }
+}
+
+/* ---------- stage ---------- */
+.travel-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* ---------- logo ---------- */
+.travel-logo {
+  width: 320px;
+  height: 320px;
+  object-fit: contain;
+  z-index: 3;
+  filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.55));
+  opacity: 1;
+}
+.phase-enter .travel-logo {
+  animation:
+    logo-in 0.7s 0.1s cubic-bezier(0.34, 1.56, 0.64, 1) backwards,
+    logo-pulse 2.4s 0.8s ease-in-out infinite;
+}
+.phase-hold .travel-logo {
+  animation: logo-pulse 2.4s ease-in-out infinite;
+}
+.phase-exit .travel-logo {
+  animation: logo-out 0.6s ease-in forwards;
+}
+
+@keyframes logo-in {
+  0%   { opacity: 0; transform: scale(0.2) rotate(-180deg); }
+  100% { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+@keyframes logo-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+@keyframes logo-out {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.5); }
+}
+
+/* ---------- orbits ---------- */
+.orbits {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 2;
+}
+
+.orbit {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: orbit-spin var(--speed) linear infinite;
+  animation-direction: var(--dir);
+  animation-delay: var(--delay);
+  will-change: transform;
+}
+
+.orbit-icon {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  left: var(--radius);
+  top: -36px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
+  opacity: 1;
+}
+
+.phase-enter .orbit-icon {
+  animation: icon-in 0.6s var(--ico-delay) cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+.phase-exit .orbit-icon {
+  animation: icon-out 0.5s ease-in forwards;
+}
+
+@keyframes orbit-spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+@keyframes icon-in  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes icon-out { to   { opacity: 0; transform: scale(0); } }
+
+/* ---------- caption ---------- */
+.travel-caption {
+  position: absolute;
+  bottom: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  text-align: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.travel-caption-from {
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  opacity: 0;
+  color: rgba(255, 255, 255, 0.55);
+}
+.travel-caption-to {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0;
+}
+.phase-enter .travel-caption-from,
+.phase-hold  .travel-caption-from { animation: cap-in 0.4s 0.5s ease forwards; }
+.phase-enter .travel-caption-to,
+.phase-hold  .travel-caption-to   { animation: cap-in 0.5s 0.6s ease forwards; }
+.phase-exit  .travel-caption-from,
+.phase-exit  .travel-caption-to   { animation: cap-out 0.35s ease forwards; }
+
+@keyframes cap-in  {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes cap-out {
+  to { opacity: 0; transform: translateY(-10px); }
+}
