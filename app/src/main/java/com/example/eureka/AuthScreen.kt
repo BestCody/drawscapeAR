@@ -43,7 +43,7 @@ fun AuthScreen(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(1.4f) // makes image extend beyond screen bottom
+                .fillMaxHeight(1f) // makes image extend beyond screen bottom
                 .alpha(0.28f)
         )
 
